@@ -14,7 +14,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 解压源码
-        run: unzip -o src.zip -d .
+        run: |
+          python3 - <<'PY'
+          import zipfile, os
+          with zipfile.ZipFile('src.zip') as z:
+              for info in z.infolist():
+                  name = info.filename.replace('\\', '/')
+                  if name.endswith('/'):
+                      os.makedirs(name, exist_ok=True)
+                      continue
+                  d = os.path.dirname(name)
+                  if d:
+                      os.makedirs(d, exist_ok=True)
+                  with z.open(info) as s, open(name, 'wb') as t:
+                      t.write(s.read())
+          print('extracted')
+          PY
+          ls -la
 
       - uses: actions/setup-java@v4
         with:
